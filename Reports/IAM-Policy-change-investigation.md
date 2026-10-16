@@ -76,3 +76,22 @@ No live remediation was performed as part of this investigation.
 
 ## 7. Conclusion:
 The event provides useful evidence for an IAM permission-change investigation. The appropriate next action is to verify the authorization and resulting permissions, document the findings, and apply corrective measures only if a control gap is confirmed.
+
+## Remediation and Verification:
+
+### Finding:
+The IAM policy `S3-Security-read-only-policy` initially contained an incorrect placeholder resource in its `s3:GetObject` statement: `arn:aws:s3:::YOUR-BUCKET-NAME/*`.
+
+### Remediation:
+Updated the object resource to reference the intended S3 bucket:
+`arn:aws:s3:::aws-s3-security-lab-project-1/*`
+The `s3:ListBucket` resource already referenced the intended bucket and was left unchanged.
+
+### Verification Evidence:
+The saved IAM policy was reviewed in the AWS Management Console, and a screenshot of the corrected policy was captured and uploaded to the repository as `screenshots/03-iam-policy-resource-remediation.png`.
+
+### Security Impact:
+The correction aligns the `s3:GetObject` resource with the intended bucket. This resolves the identified resource mismatch in the policy statement.
+
+### Limitations:
+This review confirms the policy document's resource configuration, not the complete effective permissions of a particular IAM principal. Other identity policies, bucket policies, permissions boundaries, service control policies, and applicable access controls may also affect access. No independent access test has yet been documented.
