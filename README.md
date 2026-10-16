@@ -124,6 +124,7 @@ AI-Cloud-Security-Analyst/
 ├── src/
 │   ├── __init__.py
 │   ├── analyzer.py
+│   ├── main.py
 │   └── report_generator.py
 ├── tests/
 │   ├── __init__.py
@@ -138,6 +139,14 @@ AI-Cloud-Security-Analyst/
 ├── .gitignore
 └── README.md
 ```
+- `src/analyzer.py` — analyzes individual events using independent security rules.
+- `src/main.py` — loads sample events, runs the analyzer, and generates a JSON report.
+- `src/report_generator.py` — creates timestamped JSON reports with severity summaries.
+- `tests/` — contains automated tests for detection and report generation.
+- `samples/` — contains synthetic CloudTrail event examples.
+- `reports/` — contains investigation documentation and locally generated reports.
+- `screenshots/` — contains project evidence and execution screenshots.
+
 The `samples/` directory is intended for synthetic or sanitized CloudTrail events. The `reports/` directory contains investigation documentation and may also contain locally generated JSON reports. Generated reports should be reviewed before being committed to a public repository.
 
 ## Automated Testing:
