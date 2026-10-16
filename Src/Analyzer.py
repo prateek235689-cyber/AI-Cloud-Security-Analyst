@@ -1,16 +1,19 @@
-
 from typing import Any
 
 
-def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
+def analyze_event(event: dict[str, Any]) -> list[dict[str, Any]]:
     """
-    Analyze one AWS CloudTrail event using basic security rules.
+    Analyze one AWS CloudTrail event using independent security rules.
+
+    Returns a list of findings because multiple rules can match one event.
     This is a local, rule-based prototype—not a live AWS monitor.
     """
     event_name = event.get("eventName", "Unknown")
     source_ip = event.get("sourceIPAddress", "Unknown")
-    user_identity = event.get("userIdentity", {})
+    event_time = event.get("eventTime", "Unknown")
+    event_id = event.get("eventID", "Unknown")
 
+    user_identity = event.get("userIdentity", {})
     if not isinstance(user_identity, dict):
         user_identity = {}
 
@@ -21,29 +24,32 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
     )
     identity_type = user_identity.get("type", "Unknown")
 
-    finding = {
-        "rule_id": "NO_MATCH",
+    findings: list[dict[str, Any]] = []
+
+    # Shared event metadata included in every finding.
+    metadata = {
+        "event_id": event_id,
+        "event_time": event_time,
         "event_name": event_name,
         "source_ip": source_ip,
         "user": user_name,
-        "severity": "INFO",
-        "title": "No configured detection rule matched",
-        "description": "The event did not match the current prototype rules.",
-        "recommendation": "Review the event in context if it is unexpected.",
     }
 
-    # Rule 1: Failed AWS console sign-in.
-    if (
+    # Rule 1: Detect failed AWS console sign-ins.
+    is_failed_login = (
         event_name == "ConsoleLogin"
         and (
-            event.get("errorMessage")
+            bool(event.get("errorMessage"))
             or (
                 isinstance(event.get("responseElements"), dict)
                 and event["responseElements"].get("ConsoleLogin") == "Failure"
             )
         )
-    ):
-        finding.update({
+    )
+
+    if is_failed_login:
+        findings.append({
+            **metadata,
             "rule_id": "AUTH-001",
             "severity": "MEDIUM",
             "title": "Failed AWS console sign-in",
@@ -57,16 +63,19 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
-    # Rule 2: IAM policy changes.
-    elif event_name in {
+    # Rule 2: Detect IAM policy changes.
+    iam_change_events = {
         "PutUserPolicy",
         "PutRolePolicy",
         "PutGroupPolicy",
         "AttachUserPolicy",
         "AttachRolePolicy",
         "AttachGroupPolicy",
-    }:
-        finding.update({
+    }
+
+    if event_name in iam_change_events:
+        findings.append({
+            **metadata,
             "rule_id": "IAM-001",
             "severity": "HIGH",
             "title": "IAM permissions changed",
@@ -81,15 +90,16 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
-    # Rule 3: AWS root identity activity.
-    elif identity_type == "Root":
-        finding.update({
+    # Rule 3: Flag AWS root identity activity independently.
+    if identity_type == "Root":
+        findings.append({
+            **metadata,
             "rule_id": "IDENTITY-001",
             "severity": "HIGH",
             "title": "AWS root account activity detected",
             "description": (
                 "The CloudTrail event identifies the actor as the AWS "
-                "root identity. This activity needs contextual review "
+                "root identity. This activity requires contextual review "
                 "and is not automatically malicious."
             ),
             "recommendation": (
@@ -99,4 +109,19 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
-    return finding
+    # Return an informational finding if no rule matched.
+    if not findings:
+        findings.append({
+            **metadata,
+            "rule_id": "NO_MATCH",
+            "severity": "INFO",
+            "title": "No configured detection rule matched",
+            "description": (
+                "The event did not match the current prototype rules."
+            ),
+            "recommendation": (
+                "Review the event in context if it is unexpected."
+            ),
+        })
+
+    return findings
