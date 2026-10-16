@@ -44,6 +44,24 @@ class TestAnalyzeEvent(unittest.TestCase):
             "No configured detection rule matched",
         )
 
+    def test_root_account_activity(self):
+        event = {
+            "eventName": "CreateUser",
+            "sourceIPAddress": "203.0.113.30",
+            "userIdentity": {
+                "type": "Root",
+                "principalId": "EXAMPLE-ROOT-IDENTITY"
+            }
+        }
+
+        result = analyze_event(event)
+
+        self.assertEqual(result["severity"], "HIGH")
+        self.assertEqual(
+            result["title"],
+            "AWS root account activity detected"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
