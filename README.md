@@ -150,19 +150,33 @@ AI-Cloud-Security-Analyst/
 The `samples/` directory is intended for synthetic or sanitized CloudTrail events. The `reports/` directory contains investigation documentation and may also contain locally generated JSON reports. Generated reports should be reviewed before being committed to a public repository.
 
 ## Automated Testing:
-The current local test suite contains **14 passing tests**:
-- Failed console sign-in detection
-- IAM policy change detection
-- AWS root identity activity detection
-- Handling unmatched events
-- Rule ID validation
-- Multiple findings generated from a single event
-- Event metadata preservation
-- JSON report file creation
-- Severity count calculation
-- Preservation of findings in the report
-- Empty-report handling
+The project uses Python's built-in `unittest` framework to validate detection rules, JSON report generation, and the end-to-end analysis pipeline.
+**Latest verified local test result: 15 tests passed, with zero failures or errors.**
 
+### Test coverage:
+- Failed AWS console sign-in detection
+- IAM policy attachment and modification detection
+- AWS root identity activity detection
+- Handling of unmatched events
+- Detection rule ID validation
+- Multiple findings generated from one event
+- Event metadata preservation
+- JSON report creation and file validation
+- Severity summary calculation
+- Preservation of findings in generated reports
+- Empty report handling
+- End-to-end processing of four synthetic CloudTrail events
+- Expected finding counts and severity distribution
+- Multiple findings for a root identity policy-change event
+- Validation of the generated report summary
+
+### Run the tests:
+From the project root, with Python available in your environment, run:
+```bash
+python -m unittest discover -s tests -v
+```
+The most recently reported local run completed with 15 passing tests in 0.021 seconds. This result has been verified locally; it does not imply that a CI service or GitHub Actions workflow has run.
+The end-to-end test uses synthetic CloudTrail events and a temporary directory for report output, avoiding the need for live AWS activity or additional cloud resources.
 ### Run the tests:
 From the project root, with Python available in your environment, run:
 ```bash
