@@ -22,6 +22,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
     identity_type = user_identity.get("type", "Unknown")
 
     finding = {
+        "rule_id": "NO_MATCH",
         "event_name": event_name,
         "source_ip": source_ip,
         "user": user_name,
@@ -31,7 +32,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
         "recommendation": "Review the event in context if it is unexpected.",
     }
 
-    # Rule 1: Detect failed AWS console sign-ins.
+    # Rule 1: Failed AWS console sign-in.
     if (
         event_name == "ConsoleLogin"
         and (
@@ -43,6 +44,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
         )
     ):
         finding.update({
+            "rule_id": "AUTH-001",
             "severity": "MEDIUM",
             "title": "Failed AWS console sign-in",
             "description": (
@@ -55,7 +57,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
-    # Rule 2: Detect IAM policy changes.
+    # Rule 2: IAM policy changes.
     elif event_name in {
         "PutUserPolicy",
         "PutRolePolicy",
@@ -65,6 +67,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
         "AttachGroupPolicy",
     }:
         finding.update({
+            "rule_id": "IAM-001",
             "severity": "HIGH",
             "title": "IAM permissions changed",
             "description": (
@@ -78,21 +81,21 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
-    # Rule 3: Flag activity performed by the AWS root identity.
+    # Rule 3: AWS root identity activity.
     elif identity_type == "Root":
         finding.update({
+            "rule_id": "IDENTITY-001",
             "severity": "HIGH",
             "title": "AWS root account activity detected",
             "description": (
                 "The CloudTrail event identifies the actor as the AWS "
-                "root identity. Root activity is sensitive and requires "
-                "contextual review; it is not automatically malicious."
+                "root identity. This activity needs contextual review "
+                "and is not automatically malicious."
             ),
             "recommendation": (
                 "Verify whether the activity was necessary and authorized. "
-                "Review the event name, time, source and related activity. "
-                "Prefer an appropriately scoped IAM identity for routine "
-                "administration."
+                "Review the event time, source and related activity. "
+                "Prefer a suitably scoped IAM identity for routine work."
             ),
         })
 
