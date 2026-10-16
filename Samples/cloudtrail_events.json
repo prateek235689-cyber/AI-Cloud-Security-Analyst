@@ -1,0 +1,53 @@
+[
+  {
+    "eventVersion": "1.11",
+    "eventTime": "2026-10-16T10:00:00Z",
+    "eventID": "synthetic-event-001",
+    "eventSource": "signin.amazonaws.com",
+    "eventName": "ConsoleLogin",
+    "sourceIPAddress": "203.0.113.10",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "test-user"
+    },
+    "responseElements": {
+      "ConsoleLogin": "Failure"
+    }
+  },
+  {
+    "eventVersion": "1.11",
+    "eventTime": "2026-10-16T10:05:00Z",
+    "eventID": "synthetic-event-002",
+    "eventSource": "iam.amazonaws.com",
+    "eventName": "AttachUserPolicy",
+    "sourceIPAddress": "203.0.113.20",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "test-admin"
+    }
+  },
+  {
+    "eventVersion": "1.11",
+    "eventTime": "2026-10-16T10:10:00Z",
+    "eventID": "synthetic-event-003",
+    "eventSource": "ec2.amazonaws.com",
+    "eventName": "DescribeInstances",
+    "sourceIPAddress": "203.0.113.30",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "test-user"
+    }
+  },
+  {
+    "eventVersion": "1.11",
+    "eventTime": "2026-10-16T10:15:00Z",
+    "eventID": "synthetic-event-004",
+    "eventSource": "iam.amazonaws.com",
+    "eventName": "AttachRolePolicy",
+    "sourceIPAddress": "203.0.113.40",
+    "userIdentity": {
+      "type": "Root",
+      "principalId": "EXAMPLE-ROOT-IDENTITY"
+    }
+  }
+]
