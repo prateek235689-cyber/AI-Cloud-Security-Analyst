@@ -1,3 +1,4 @@
+
 from typing import Any
 
 
@@ -9,11 +10,16 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
     event_name = event.get("eventName", "Unknown")
     source_ip = event.get("sourceIPAddress", "Unknown")
     user_identity = event.get("userIdentity", {})
+
+    if not isinstance(user_identity, dict):
+        user_identity = {}
+
     user_name = (
         user_identity.get("userName")
         or user_identity.get("principalId")
         or "Unknown"
     )
+    identity_type = user_identity.get("type", "Unknown")
 
     finding = {
         "event_name": event_name,
@@ -25,22 +31,23 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
         "recommendation": "Review the event in context if it is unexpected.",
     }
 
+    # Rule 1: Detect failed AWS console sign-ins.
     if (
-    event_name == "ConsoleLogin"
-    and (
-        event.get("errorMessage")
-        or (
-            isinstance(event.get("responseElements"), dict)
-            and event["responseElements"].get("ConsoleLogin") == "Failure"
+        event_name == "ConsoleLogin"
+        and (
+            event.get("errorMessage")
+            or (
+                isinstance(event.get("responseElements"), dict)
+                and event["responseElements"].get("ConsoleLogin") == "Failure"
+            )
         )
-    )
-):
+    ):
         finding.update({
             "severity": "MEDIUM",
             "title": "Failed AWS console sign-in",
             "description": (
-                "The event contains an error message, indicating "
-                "that the console sign-in did not succeed."
+                "The event indicates that the AWS console sign-in failed, "
+                "based on its error message or failure status."
             ),
             "recommendation": (
                 "Verify whether the attempt was expected. Review related "
@@ -48,6 +55,7 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
             ),
         })
 
+    # Rule 2: Detect IAM policy changes.
     elif event_name in {
         "PutUserPolicy",
         "PutRolePolicy",
@@ -67,6 +75,24 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
                 "Verify the actor, target identity, policy and change "
                 "approval. Check whether the resulting permissions "
                 "follow least-privilege principles."
+            ),
+        })
+
+    # Rule 3: Flag activity performed by the AWS root identity.
+    elif identity_type == "Root":
+        finding.update({
+            "severity": "HIGH",
+            "title": "AWS root account activity detected",
+            "description": (
+                "The CloudTrail event identifies the actor as the AWS "
+                "root identity. Root activity is sensitive and requires "
+                "contextual review; it is not automatically malicious."
+            ),
+            "recommendation": (
+                "Verify whether the activity was necessary and authorized. "
+                "Review the event name, time, source and related activity. "
+                "Prefer an appropriately scoped IAM identity for routine "
+                "administration."
             ),
         })
 
