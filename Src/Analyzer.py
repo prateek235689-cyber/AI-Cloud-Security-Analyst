@@ -25,7 +25,16 @@ def analyze_event(event: dict[str, Any]) -> dict[str, Any]:
         "recommendation": "Review the event in context if it is unexpected.",
     }
 
-    if event_name == "ConsoleLogin" and event.get("errorMessage"):
+    if (
+    event_name == "ConsoleLogin"
+    and (
+        event.get("errorMessage")
+        or (
+            isinstance(event.get("responseElements"), dict)
+            and event["responseElements"].get("ConsoleLogin") == "Failure"
+        )
+    )
+):
         finding.update({
             "severity": "MEDIUM",
             "title": "Failed AWS console sign-in",
