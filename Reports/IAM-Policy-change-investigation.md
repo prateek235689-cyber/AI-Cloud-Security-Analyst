@@ -53,6 +53,23 @@ The supplied record does not contain an `errorCode`. However, `responseElements`
 - Monitor IAM policy attachment and modification events.
 - Keep security investigation evidence sanitized before publishing it.
 
+## 5.1 Verified IAM Policy Review:
+The customer-managed policy `S3-Security-read-only-policy` was inspected in the AWS IAM console.
+
+### Observed permissions:
+- `s3:ListBucket` is allowed for the bucket resource `aws-s3-security-lab-project-1`.
+- `s3:GetObject` is allowed for the resource pattern `arn:aws:s3:::YOUR-BUCKET-NAME/*`.
+
+### Finding: Placeholder resource ARN:
+The object-read statement uses `YOUR-BUCKET-NAME` as a resource placeholder. If this is not the intended bucket name, the policy will not grant object-read access to the intended bucket through this statement.
+
+**Recommended action:** Identify the intended bucket, validate the resource ARN, and test the effective permissions using an appropriately scoped test identity before making any policy changes.
+
+### Scope limitation:
+The policy document shows these two allowed actions, but this alone does not establish the user's complete effective permissions. Other attached policies, group membership, permission boundaries, session policies, and applicable resource policies may affect access.
+
+No policy changes were made during this review.
+
 ## 6. Limitations:
 This report is based on one CloudTrail event record. It does not establish malicious intent, prove that the policy grants only read-only access, or independently confirm the final IAM configuration.
 No live remediation was performed as part of this investigation.
